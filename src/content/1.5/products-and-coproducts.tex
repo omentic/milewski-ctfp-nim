@@ -69,7 +69,7 @@ negative, with less-than-or-equal relation for morphisms.
 
 In the category of sets and functions, the initial object is the empty
 set. Remember, an empty set corresponds to the Haskell type
-\code{Void} (there is no corresponding type in C++) and the unique
+\code{Void} (there is no corresponding type in Nim) and the unique
 polymorphic function from \code{Void} to any other type is called
 \code{absurd}:
 
@@ -102,8 +102,8 @@ will show shortly. But first let's look at some examples. In a poset,
 the terminal object, if it exists, is the biggest object. In the
 category of sets, the terminal object is a singleton. We've already
 talked about singletons --- they correspond to the \code{void} type in
-C++ and the unit type \code{()} in Haskell. It's a type that has only
-one value --- implicit in C++ and explicit in Haskell, denoted by
+Nim and the unit type \code{()} in Haskell. It's a type that has only
+one value --- implicit in Nim and explicit in Haskell, denoted by
 \code{()}. We've also established that there is one and only one pure
 function from any type to the unit type:
 
@@ -241,13 +241,11 @@ These definitions can be simplified even further with the use of
 wildcards:
 
 \src{snippet08}
-In C++, we would use template functions, for instance:
+In Nim, we would use generic functions, for instance:
 
-\begin{snip}{cpp}
-template<class A, class B> A
-fst(pair<A, B> const & p) {
-    return p.first;
-}
+\begin{snip}{nim}
+func fst[A, B](p: (A, B)): A =
+  return p[0]
 \end{snip}
 Equipped with this seemingly very limited knowledge, let's try to define
 a pattern of objects and morphisms in the category of sets that will
@@ -437,36 +435,36 @@ can think of an element of a disjoint union as being tagged with an
 identifier that specifies its origin.
 
 For a programmer, it's easier to understand a coproduct in terms of
-types: it's a tagged union of two types. C++ supports unions, but they
+types: it's a tagged union of two types. Nim supports unions, but they
 are not tagged. It means that in your program you have to somehow keep
-track which member of the union is valid. To create a tagged union, you
-have to define a tag --- an enumeration --- and combine it with the
-union. For instance, a tagged union of an \code{int} and a
-\code{char const *} could be implemented as:
+track which member of the union is valid. This is horribly dangerous and
+so unions are relegated to the \code{\{.union.\}} pragma (pragmas in Nim
+provide for using experimental features without special syntax).
+To create a tagged union, you have to define a tag --- an enumeration ---
+and combine it with a \code{case} expression to form an object variant.
+For instance, an object variant of an \code{int} and a \code{string} could
+be implemented as:
 
-\begin{snip}{cpp}
-struct Contact { 
-    enum { isPhone, isEmail } tag;
-    union { int phoneNum; char const * emailAddr; };
-};
+\begin{snip}{nim}
+type ContactKind = enum
+  isPhone, isEmail
+type Contact = object
+  case kind: ContactKind
+  of isPhone:
+    phoneNum: int
+  of isEmail:
+    emailAddr: string
 \end{snip}
 The two injections can either be implemented as constructors or as
 functions. For instance, here's the first injection as a function
 \code{PhoneNum}:
 
-\begin{snip}{cpp}
-Contact PhoneNum(int n) { 
-    Contact c;
-    c.tag = isPhone;
-    c.phoneNum = n;
-    return c;
-}
+\begin{snip}{nim}
+func phoneNum(n: int): Contact =
+  result.kind = isPhone
+  result.phoneNum = n
 \end{snip}
 It injects an integer into \code{Contact}.
-
-A tagged union is also called a \newterm{variant}, and there is a very
-general implementation of a variant in the boost library,
-\code{boost::variant}.
 
 In Haskell, you can combine any data types into a tagged union by
 separating data constructors with a vertical bar. The \code{Contact}
@@ -603,15 +601,15 @@ isomorphism is the same as a bijection.
         Show that \code{Either} is a ``better'' coproduct than \code{int}
         equipped with two injections:
 
-        \begin{snip}{cpp}
-int i(int n) { return n; }
-int j(bool b) { return b ? 0: 1; }
+        \begin{snip}{nim}
+func i(n: int): int = n
+func j(b: bool): int = if b: 0 else: 1
 \end{snip}
 
         Hint: Define a function
 
-        \begin{snip}{cpp}
-int m(Either const & e);
+        \begin{snip}{nim}
+func m(e: Either): int
 \end{snip}
 
         that factorizes \code{i} and \code{j}.
@@ -622,13 +620,11 @@ int m(Either const & e);
   \item
         Still continuing: What about these injections?
 
-        \begin{snip}{cpp}
-int i(int n) { 
-    if (n < 0) return n;
-    return n + 2;
-}
-
-int j(bool b) { return b ? 0: 1; }
+        \begin{snip}{nim}
+func i(n: int): int =
+  if n < 0: n
+  else: n + 2
+func j(b: bool): int = if b: 0 else: 1
 \end{snip}
   \item
         Come up with an inferior candidate for a coproduct of \code{int} and

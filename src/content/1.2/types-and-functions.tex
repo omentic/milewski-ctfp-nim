@@ -61,10 +61,9 @@ and we all know how it ends.
 Another argument I hear a lot is that dealing with types imposes too
 much burden on the programmer. I could sympathize with this sentiment
 after having to write a few declarations of iterators in C++ myself,
-except that there is a technology called \newterm{type inference} that lets
-the compiler deduce most of the types from the context in which they are
-used. In C++, you can now declare a variable \code{auto} and let the
-compiler figure out its type.
+except that there is a new technology called \newterm{good language design}
+that lets the programmer use a language other than C/C++ that has a proper
+type system and solid type inference. Such as Rust: or more relevantly, Nim.
 
 In Haskell, except on rare occasions, type annotations are purely
 optional. Programmers tend to use them anyway, because they can tell a
@@ -114,7 +113,7 @@ When we declare \code{x} to be an \code{Integer}:
 we are saying that it's an element of the set of integers.
 \code{Integer} in Haskell is an infinite set, and it can be used to do
 arbitrary precision arithmetic. There is also a finite-set \code{Int}
-that corresponds to machine type, just like the C++ \code{int}.
+that corresponds to machine type, just like Nim's \code{int}.
 
 There are some subtleties that make this identification of types and
 sets tricky. There are problems with polymorphic functions that involve
@@ -274,7 +273,7 @@ standard library come with proofs of correctness.
 
 \section{Pure and Dirty Functions}
 
-The things we call functions in C++ or any other imperative language,
+The things we call functions in C++ or most other imperative languages,
 are not the same things mathematicians call functions. A mathematical
 function is just a mapping of values to values.
 
@@ -391,44 +390,40 @@ concrete type. What should we call a polymorphic function from any type
 to unit type? Of course we'll call it \code{unit}:
 
 \src{snippet10}
-In C++ you would write this function as:
+In Nim you would write this function as:
 
 \begin{snip}{cpp}
-template<class T>
-void unit(T) {}
+func unit[T](_: T) = discard
 \end{snip}
-Next in the typology of types is a two-element set. In C++ it's called
-\code{bool} and in Haskell, predictably, \code{Bool}. The difference
-is that in C++ \code{bool} is a built-in type, whereas in Haskell it
+
+The \code{discard} statement is typically used to ``discard'' a value from an
+expression: as Nim ensures that all expressions returning a type must be dealt
+with. This also allows for the \code{return} keyword to be elided in some
+cases. However, as is the case here, \code{discard} can be used on its own as
+a no-op. The \code{_} identifier is a similar no-op: it discards what would
+normally be a binding.
+
+Next in the typology of types is a two-element set. In Nim it's called
+\code{bool} and in Haskell, predictably, \code{Bool}. In Haskell it
 can be defined as follows:
 
 \src{snippet11}
 (The way to read this definition is that \code{Bool} is either
-\code{True} or \code{False}.) In principle, one should also be able
-to define a Boolean type in C++ as an enumeration:
+\code{True} or \code{False}.)
 
-\begin{snip}{cpp}
-enum bool {
-    true,
-    false
-};
+Nim's boolean type is also defined as an enumeration:
+\begin{snip}{nim}
+type bool = enum
+  false = 0, true = 1
 \end{snip}
-but C++ \code{enum} is secretly an integer. The C++11
-``\code{enum class}'' could have been used instead, but then you
-would have to qualify its values with the class name, as in
-\code{bool::true} and \code{bool::false}, not to mention having to
-include the appropriate header in every file that uses it.
 
 Pure functions from \code{Bool} just pick two values from the target
 type, one corresponding to \code{True} and another to \code{False}.
 
 Functions to \code{Bool} are called \newterm{predicates}. For instance,
 the Haskell library \code{Data.Char} is full of predicates like
-\code{isAlpha} or \code{isDigit}. In C++ there is a similar library
-\code{} that defines, among others, \code{isalpha} and
-\code{isdigit}, but these return an \code{int} rather than a
-Boolean. The actual predicates are defined in \code{std::ctype} and
-have the form \code{ctype::is(alpha, c)}, \code{ctype::is(digit, c)}, etc.
+\code{isAlpha} or \code{isDigit}. In Nim there is similar functionality split
+between \code{std/strutils} and \code{std/unicode}.
 
 \section{Challenges}
 
